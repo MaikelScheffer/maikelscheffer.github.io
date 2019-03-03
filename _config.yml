@@ -2,24 +2,16 @@
 permalink:           pretty
 
 # Setup
-title:               Progress
-tagline:             A responsive blog theme that illustrates reading progress. Suited for continous reading.
-url:                 http://alexanderussell.github.io
-baseurl:             /progress-for-jekyll
-analytics_id:
+title:               Blog
+tagline:             MyBlog
+url:                 https://abitofbytes.com
+baseurl:             /
 
 # Owner/author information
 owner:
-  name:           Alex Russell
+  name:           Maikel Scheffer
   avatar:         avatar.png
   bio:            "Designer."
-  email:          alex@collectivelymade.com
-  twitter:        alexanderussell
-  github:         alexanderussell
-  instagram:      alexanderussell
-  dribbble:       alexanderussell
-  location:       "Lincoln, NE"
-
 
 # Custom vars
 version:             2.0.0
