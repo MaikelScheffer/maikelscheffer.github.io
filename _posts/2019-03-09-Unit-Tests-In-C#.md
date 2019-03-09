@@ -187,6 +187,7 @@ Maybe move that object creation bit in a seperate method?
 Call it something like `MockData.CreateHeadphonesInMemoryDB()`? 
 
 Hold on, why does the context suddenly have 4 headphones?
+Ooooh, I'm using it as a reference and each TestMethod is pushing stuff into it?
 
 Welcome to the realm of the damned.     
 The constant creation of new objects that sorta match test cases.    
@@ -202,12 +203,19 @@ Turns out there's several NuGet packages out there that'll create that garbage f
 [Fact]
 public void Headphone_GetHeadphones_ShouldPass()
 {
-    var items = _fixture.CreateMany<Headphone>(2).ToList();
+    // AutoFixture - Nuget
+    var fixture = new Fixture();
+
+    // create 2 instances of headphone with random data
+    var items = fixture.CreateMany<Headphone>(2).ToList();
+
+    // not sharing the context instance, recreate
+    var context = Setup.GetInMemoryHeadphonesContext();
 
     context.Headphones.AddRange(listOfHeadphones);
     context.SaveChanges();
 
-    IHeadphoneRepo repo = new HeadphoneRepo(_context);
+    IHeadphoneRepo repo = new HeadphoneRepo(context);
 
     var service = new HeadphoneService(repo);
 
@@ -218,6 +226,13 @@ public void Headphone_GetHeadphones_ShouldPass()
 
 {% endhighlight %}
 
+I mean, at least we've reduced the code a fair bit.  
+But we're still creating a fresh instance of the context each time to shove into the repo.
+The repo uses it to reach out for data.
+
+We can solve this using Moq
+
+### A blatant Moqery
 
 {% highlight c# %}
 
@@ -226,7 +241,15 @@ public void Headphone_GetHeadphones_ShouldPass()
 {
     var items = _fixture.CreateMany<Headphone>(2).ToList();
 
+    // Moq uses an interface (or abstract class) to
+    // create a fake implementation of them
+    // they have no actual data source backing them though
     var mock = new Mock<IHeadphoneRepo>();
+
+    // because there's no data we have to configure for 
+    // each method what it'll return.
+    // although this allows us to create perfect, predictable tests
+    // it's still to much work to each time in my opinion
     mock.Setup(x => x.GetHeadphones()).Returns(items);
 
     var service = new HeadphoneService(mock.Object);
@@ -237,3 +260,44 @@ public void Headphone_GetHeadphones_ShouldPass()
 }
 
 {% endhighlight %}
+
+
+
+### AutoMoq
+
+AutoMoq combines AutoFixture and Moq into 1.
+Yeah, really. I know, right? You never expected that.  
+Auto(Fixture)-Moq, get it? Wow.
+
+{% highlight c# %}
+
+[Fact]
+public void Headphone_GetHeadphones_ShouldPass()
+{
+    var items = _fixture.CreateMany<Headphone>(2).ToList();
+
+    // Moq uses an interface (or abstract class) to
+    // create a fake implementation of them
+    // they have no actual data source backing them though
+    var mock = new Mock<IHeadphoneRepo>();
+
+    // because there's no data we have to configure for 
+    // each method what it'll return.
+    // although this allows us to create perfect, predictable tests
+    // it's still to much work to each time in my opinion
+    mock.Setup(x => x.GetHeadphones()).Returns(items);
+
+    var service = new HeadphoneService(mock.Object);
+
+    var headphones = service.GetHeadphones();
+
+    Assert.Equal(2, headphones.Count());
+}
+
+{% endhighlight %}
+
+Packages mentioned in this post:
+* [AutoFixture](https://github.com/AutoFixture/AutoFixture)
+* [AutoMoq](https://github.com/darrencauthon/AutoMoq)
+* [Moq](https://github.com/moq/moq4)
+* [xUnit 2](https://github.com/xunit/xunit)
