@@ -301,3 +301,80 @@ Packages mentioned in this post:
 * [AutoMoq](https://github.com/darrencauthon/AutoMoq)
 * [Moq](https://github.com/moq/moq4)
 * [xUnit 2](https://github.com/xunit/xunit)
+
+### I'm being abused by my relational DB and its circular references
+
+Circular references are typically bad, can't you just refactor your entire application real quick?  
+What? You can't?. Jeesh.  
+You've wandered back into the realm of pain.
+
+The below will fix a circular `Parent -> Child -> Parent -> Etc.` chain.
+
+### On Fixture creation
+
+
+{% highlight c# %}
+var fixture = new Fixture();
+fixture.Behaviors.Remove(new ThrowingRecursionBehavior());
+fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+{% endhighlight %}
+
+### It's not working
+
+Well, there's this property that'll disable data-mocking for the instance properties
+{% highlight c# %}
+fixture.OmitAutoProperties = true;
+{% endhighlight %}
+
+Which in my opinion makes AutoFixture entirely useless.  
+Luckily there's alternatives.  
+
+Chances are you have a deeply relational database context on your hands.    
+Some kind of beast of a context that causes flashbacks to the Linq2SQL days.   
+There's bad news though: My life also has Linq2SQL in it.    
+So I was forced to search for a terrible, hacky solution.   
+
+AutoFixture allows the creation of `Cusomizations`.    
+AutoMoq above uses also makes use of one of those.   
+They'll allow you to create a `ISpecimenBuilder` that can contain instructions in how to create instances. 
+
+{% highlight c# %}
+public class IgnoreVirtualMembers : ISpecimenBuilder
+{
+    public object Create(object request, ISpecimenContext context)
+    {
+        if (context == null)
+        {
+            throw new ArgumentNullException("context not found");
+        }
+
+        var pi = request as PropertyInfo;
+        if (pi == null)
+        {
+            return new NoSpecimen();
+        }
+
+        // Using Code-First EF/EFC
+        if (pi.GetGetMethod().IsVirtual)
+        {
+            return null;
+        }
+
+        // Using Linq2Sql DB first (EntitySets)
+
+
+        return new NoSpecimen();
+    }
+}
+
+public class OnlyTopLevelProperties : ICustomization
+{
+    public void Customize(IFixture fixture)
+    {
+        fixture.Customizations.Add(new IgnoreVirtualMembers());
+    }
+}
+{% endhighlight %}
+
+This will make AutoFixture only create top-level properties.    
+Anything that's attached by reference won't be constructed (virtual / entityref).  
