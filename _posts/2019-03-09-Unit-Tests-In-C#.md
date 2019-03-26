@@ -7,8 +7,6 @@ categories: C#, .NET, Unit Testing
 
 ### How to write unit tests and not want to die (more than usual)
 
-TODO: Cleanup
-
 You read about it everywhere: unit tests.  
 People praise it to high heavens and consider it God's gift to mankind.   
 In this guide I'll show you how you can actually get running and running with unit tests. 
@@ -28,10 +26,10 @@ In this i'll be using:
 #### Content
 
 * The common pure pain example
-* Injecting morphine: AutoFixture 
-* Chugging down painkillers: MOQ
-* By their powers combined: ~~Crack~~ AutoMoq
-* I'm being abused by my relational DB and its circular references
+* Easing the pain: AutoFixture 
+* It's not that bad: MOQ
+* AutoMoq
+* Please help, i'm being abused by my relational DB and its circular references
 
 
 ### Pain (Without love)
