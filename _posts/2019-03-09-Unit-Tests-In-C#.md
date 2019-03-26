@@ -92,23 +92,23 @@ Entityframeworkcore to the rescue: In-memory DB
 
 {% highlight c# %}
 
-    [Fact]
-    public void Headphone_GetHeadphones_ShouldPass()
-    {
-        var dbOptions = new DbContextOptionsBuilder<HeadphonesContext>()
-                        .UseInMemoryDatabase(databaseName: "UnitTestDB")
-                        .Options;
+[Fact]
+public void Headphone_GetHeadphones_ShouldPass()
+{
+    var dbOptions = new DbContextOptionsBuilder<HeadphonesContext>()
+                    .UseInMemoryDatabase(databaseName: "UnitTestDB")
+                    .Options;
 
-        var context = new HeadphonesContext(dbOptions);
+    var context = new HeadphonesContext(dbOptions);
 
-        IHeadphoneRepo repo = new HeadphoneRepo(context);
+    IHeadphoneRepo repo = new HeadphoneRepo(context);
 
-        var service = new HeadphoneService(repo);
+    var service = new HeadphoneService(repo);
 
-        var headphones = service.GetHeadphones();
+    var headphones = service.GetHeadphones();
 
-        Assert.Equal(2, headphones.Count());
-    }
+    Assert.Equal(2, headphones.Count());
+}
 
 {% endhighlight %}
 
